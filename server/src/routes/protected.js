@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { jwtCheck } from '../middleware/auth.js';
+import { userSync } from '../middleware/userSync.js';
 
 const router = Router();
 
@@ -9,14 +10,10 @@ const router = Router();
  *
  * This endpoint requires a valid JWT access token.
  *
- * TODO: Add the checkJwt middleware to protect this route
- * Example: router.get('/protected', checkJwt, (req, res) => { ... });
- *
  * GET /api/protected
  * Headers: Authorization: Bearer <access_token>
  */
-router.get('/protected', jwtCheck, (req, res) => {
-  // TODO: Once you add the middleware, req.auth will contain the decoded token
+router.get('/protected', jwtCheck, userSync, (req, res) => {
   // The middleware validates:
   // - Token signature (using Auth0's JWKS)
   // - Token expiration
@@ -39,12 +36,11 @@ router.get('/protected', jwtCheck, (req, res) => {
  *
  * Returns user information extracted from the JWT.
  *
- * TODO: Add the checkJwt middleware to protect this route
  *
  * GET /api/protected/profile
  * Headers: Authorization: Bearer <access_token>
  */
-router.get('/protected/profile', jwtCheck, (req, res) => {
+router.get('/protected/profile', jwtCheck, userSync, (req, res) => {
   // Common claims in the access token:
   // - sub: Subject (user ID)
   // - iss: Issuer (your Auth0 domain)
@@ -55,16 +51,18 @@ router.get('/protected/profile', jwtCheck, (req, res) => {
 
   res.json({
     message: 'User profile from token',
-    user: {
-      id: req.auth.sub,
+    // JWT token claims (from Auth0)
+    tokenClaims: {
+      sub: req.auth.sub,
       issuer: req.auth.iss,
       audience: req.auth.aud,
       scopes: req.auth.scope?.split(' ') || [],
       issuedAt: req.auth.iat,
       expiresAt: req.auth.exp
-      // issuedAt: new Date(req.auth.iat * 1000).toISOString(),
-      // expiresAt: new Date(req.auth.exp * 1000).toISOString()
-    }
+    },
+    // Database user record (from JIT provisioning)
+    // This will be populated once you implement the TODOs in userSync.js
+    databaseUser: req.user || null
   });
 });
 
@@ -73,19 +71,17 @@ router.get('/protected/profile', jwtCheck, (req, res) => {
  *
  * Returns private messages only for authenticated users.
  *
- * TODO: Add the checkJwt middleware to protect this route
  *
  * GET /api/protected/messages
  * Headers: Authorization: Bearer <access_token>
  */
-router.get('/protected/messages', jwtCheck, (req, res) => {
+router.get('/protected/messages', jwtCheck, userSync, (req, res) => {
   res.json({
     messages: [
       { id: 1, text: 'This is a private message.', private: true },
       { id: 2, text: 'Only authenticated users can see this.', private: true },
       { id: 3, text: 'Your session is secure with Auth0!', private: true }
     ],
-    // TODO: Uncomment after adding auth middleware
     accessedBy: req.auth.sub
   });
 });

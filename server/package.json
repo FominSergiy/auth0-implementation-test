@@ -6,13 +6,17 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "db:seed": "node src/db/seed.js",
+    "db:reset": "docker exec -it auth0-postgres psql -U postgres -d auth0_study -c 'DROP TABLE IF EXISTS users CASCADE;' && yarn db:seed",
+    "dev:full": "docker-compose up -d && yarn dev"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "express-oauth2-jwt-bearer": "^1.6.0"
+    "express-oauth2-jwt-bearer": "^1.6.0",
+    "pg": "^8.11.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

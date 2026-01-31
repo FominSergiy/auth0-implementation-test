@@ -8,10 +8,6 @@
  * - Validates issuer matches your Auth0 domain
  * - Validates audience matches your API identifier
  *
- * ===========================================================================
- * TODO: Implement the JWT validation middleware
- * ===========================================================================
- *
  * Steps:
  * 1. Import the 'auth' function from 'express-oauth2-jwt-bearer'
  * 2. Create the checkJwt middleware using auth() with configuration

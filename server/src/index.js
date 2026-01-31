@@ -1,12 +1,31 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/7747adb1-92c5-48fc-bd0c-248bdfd72287',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:entry',message:'index.js loaded',data:{cwd:process.cwd(),dirname:__dirname,expectedConnectionPath:join(__dirname,'db','connection.js')},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+// #endregion
 
 // Import routes
 import healthRoutes from './routes/health.js';
 import publicRoutes from './routes/public.js';
-import protectedRoutes from './routes/protected.js';
-import { jwtCheck } from './middleware/auth.js';
+let protectedRoutes;
+try {
+  const mod = await import('./routes/protected.js');
+  protectedRoutes = mod.default;
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/7747adb1-92c5-48fc-bd0c-248bdfd72287',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:protected-import',message:'protected routes loaded',data:{success:true},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+} catch (err) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/7747adb1-92c5-48fc-bd0c-248bdfd72287',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:protected-import',message:'protected routes load failed',data:{code:err.code,message:err.message,stack:err.stack},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,C,D'})}).catch(()=>{});
+  // #endregion
+  protectedRoutes = express.Router().get('*', (req, res) => res.status(503).json({ error: 'Protected routes failed to load' }));
+}
 
 const app = express();
 const PORT = process.env.PORT || 5001;
