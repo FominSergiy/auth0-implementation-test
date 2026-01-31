@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
-
+import { useAuth0 } from '@auth0/auth0-react';
+import { fetchPublicData, fetchProtectedData, fetchProtectedProfile } from '../api/api';
 /**
  * Dashboard Page Component
  *
@@ -18,18 +19,11 @@ import { Link } from 'react-router-dom';
  * 4. Import and use the api.js module for making requests
  */
 
-// TODO: Import useAuth0
-// import { useAuth0 } from '@auth0/auth0-react';
 
-// TODO: Import the API module
-// import { fetchPublicData, fetchProtectedData } from '../api/api';
 
 const Dashboard = () => {
-  // TODO: Get auth functions from useAuth0
-  // const { user, getAccessTokenSilently } = useAuth0();
+  const { user, getAccessTokenSilently } = useAuth0();
 
-  // Temporary placeholder
-  const user = { name: 'User', email: 'user@example.com' };
 
   // State for API responses
   const [publicData, setPublicData] = useState(null);
@@ -38,8 +32,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState({ public: false, protected: false, profile: false });
   const [errors, setErrors] = useState({ public: null, protected: null, profile: null });
 
-  // API base URL
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
   /**
    * Fetch Public Data
@@ -52,8 +44,7 @@ const Dashboard = () => {
     setErrors(prev => ({ ...prev, public: null }));
 
     try {
-      const response = await fetch(`${API_URL}/public`);
-      const data = await response.json();
+      const data = await fetchPublicData();
       setPublicData(data);
     } catch (error) {
       setErrors(prev => ({ ...prev, public: error.message }));
@@ -65,8 +56,6 @@ const Dashboard = () => {
   /**
    * Fetch Protected Data
    *
-   * TODO: Implement authenticated API call
-   *
    * Steps:
    * 1. Get access token using getAccessTokenSilently()
    * 2. Include token in Authorization header
@@ -77,24 +66,7 @@ const Dashboard = () => {
     setErrors(prev => ({ ...prev, protected: null }));
 
     try {
-      // TODO: Get access token
-      // const token = await getAccessTokenSilently();
-
-      // TODO: Make authenticated request
-      // const response = await fetch(`${API_URL}/protected`, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`
-      //   }
-      // });
-
-      // Temporary: Make request without token (will fail if auth middleware is enabled)
-      const response = await fetch(`${API_URL}/protected`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await fetchProtectedData(getAccessTokenSilently)
       setProtectedData(data);
     } catch (error) {
       setErrors(prev => ({ ...prev, protected: error.message }));
@@ -105,28 +77,13 @@ const Dashboard = () => {
 
   /**
    * Fetch Profile Data from API
-   *
-   * TODO: Implement authenticated API call to get profile from token
    */
   const fetchProfile = async () => {
     setLoading(prev => ({ ...prev, profile: true }));
     setErrors(prev => ({ ...prev, profile: null }));
 
     try {
-      // TODO: Get access token and make authenticated request
-      // const token = await getAccessTokenSilently();
-      // const response = await fetch(`${API_URL}/protected/profile`, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-
-      // Temporary: Make request without token
-      const response = await fetch(`${API_URL}/protected/profile`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await fetchProtectedProfile(getAccessTokenSilently)
       setProfileData(data);
     } catch (error) {
       setErrors(prev => ({ ...prev, profile: error.message }));
@@ -219,7 +176,6 @@ const Dashboard = () => {
           )}
 
           <p className="text-muted mt-2" style={{ fontSize: '0.85rem' }}>
-            TODO: Implement getAccessTokenSilently() to get the token
           </p>
         </div>
 
@@ -274,77 +230,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-/*
- * ===========================================================================
- * IMPLEMENTATION EXAMPLE
- * ===========================================================================
- *
- * import { useAuth0 } from '@auth0/auth0-react';
- *
- * const Dashboard = () => {
- *   const { user, getAccessTokenSilently } = useAuth0();
- *
- *   const fetchProtected = async () => {
- *     try {
- *       // Get the access token
- *       const token = await getAccessTokenSilently();
- *
- *       // Make authenticated request
- *       const response = await fetch('http://localhost:5000/api/protected', {
- *         headers: {
- *           Authorization: `Bearer ${token}`
- *         }
- *       });
- *
- *       const data = await response.json();
- *       console.log(data);
- *     } catch (error) {
- *       console.error('Error:', error);
- *     }
- *   };
- *
- *   return (
- *     <button onClick={fetchProtected}>Fetch Data</button>
- *   );
- * };
- *
- * ===========================================================================
- * getAccessTokenSilently OPTIONS
- * ===========================================================================
- *
- * // Basic usage
- * const token = await getAccessTokenSilently();
- *
- * // With specific audience (if different from default)
- * const token = await getAccessTokenSilently({
- *   authorizationParams: {
- *     audience: 'https://my-api.example.com'
- *   }
- * });
- *
- * // Force refresh (bypass cache)
- * const token = await getAccessTokenSilently({
- *   cacheMode: 'off'
- * });
- *
- * ===========================================================================
- * ERROR HANDLING
- * ===========================================================================
- *
- * Common errors:
- * - "Login required": User session expired, need to re-authenticate
- * - "Consent required": User needs to grant permissions
- * - "Missing Refresh Token": Can't silently refresh, need login
- *
- * try {
- *   const token = await getAccessTokenSilently();
- * } catch (error) {
- *   if (error.error === 'login_required') {
- *     // Redirect to login
- *     loginWithRedirect();
- *   }
- * }
- *
- * ===========================================================================
- */

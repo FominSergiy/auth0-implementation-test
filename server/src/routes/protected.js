@@ -45,7 +45,6 @@ router.get('/protected', jwtCheck, (req, res) => {
  * Headers: Authorization: Bearer <access_token>
  */
 router.get('/protected/profile', jwtCheck, (req, res) => {
-  // TODO: After adding auth middleware, extract user info from req.auth
   // Common claims in the access token:
   // - sub: Subject (user ID)
   // - iss: Issuer (your Auth0 domain)
@@ -61,8 +60,10 @@ router.get('/protected/profile', jwtCheck, (req, res) => {
       issuer: req.auth.iss,
       audience: req.auth.aud,
       scopes: req.auth.scope?.split(' ') || [],
-      issuedAt: new Date(req.auth.iat * 1000).toISOString(),
-      expiresAt: new Date(req.auth.exp * 1000).toISOString()
+      issuedAt: req.auth.iat,
+      expiresAt: req.auth.exp
+      // issuedAt: new Date(req.auth.iat * 1000).toISOString(),
+      // expiresAt: new Date(req.auth.exp * 1000).toISOString()
     }
   });
 });
